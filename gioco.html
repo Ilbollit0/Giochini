@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1ea">
+  <title>Giochini</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="game-page">
+  <header class="topbar">
+    <a class="brand" href="./" title="Torna ai giochi">
+      <span class="brand-logo" aria-hidden="true">←</span>
+      <span class="brand-name" id="game-name">Giochini</span>
+    </a>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="btn-tv" type="button" aria-pressed="false" title="Modalità TV: testi più grandi e alto contrasto per lo schermo condiviso">
+        <span aria-hidden="true">📺</span><span class="btn-label">Modalità TV</span>
+      </button>
+      <button class="icon-btn" id="btn-fullscreen" type="button" title="Schermo intero">
+        <span aria-hidden="true">⛶</span><span class="btn-label">Schermo intero</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <!-- Impostazioni prima di iniziare -->
+    <section class="panel setup" id="setup">
+      <div class="setup-head">
+        <span class="setup-emoji" id="setup-emoji" aria-hidden="true"></span>
+        <div>
+          <h1 id="setup-title"></h1>
+          <p class="subtitle" id="setup-desc"></p>
+        </div>
+      </div>
+      <form id="setup-form">
+        <div class="options" id="options"></div>
+        <button class="primary-btn big" type="submit">Inizia ▶</button>
+      </form>
+      <p class="setup-note">Le squadre si modificano dalla <a href="./">pagina principale</a>.</p>
+    </section>
+
+    <!-- Partita -->
+    <section class="panel play" id="play" hidden>
+      <div class="play-head">
+        <span class="q-progress" id="q-progress"></span>
+        <span class="q-tag" id="q-tag" hidden></span>
+        <div class="timer" id="timer" hidden>
+          <div class="timer-track"><div class="timer-bar" id="timer-bar"></div></div>
+          <span class="timer-num" id="timer-num"></span>
+        </div>
+      </div>
+
+      <div class="question">
+        <p class="q-prompt" id="q-prompt"></p>
+        <img class="q-image" id="q-image" alt="Bandiera da indovinare" hidden>
+        <div class="q-big" id="q-big" hidden></div>
+        <ul class="q-hints" id="q-hints"></ul>
+        <ol class="q-choices" id="q-choices"></ol>
+        <div class="q-answer" id="q-answer" hidden>
+          <span class="q-answer-label">Risposta</span>
+          <strong id="q-answer-text"></strong>
+          <p id="q-explain" hidden></p>
+        </div>
+      </div>
+
+      <div class="play-actions" id="ask-actions">
+        <button class="secondary-btn" id="btn-hint" type="button">💡 Aiuto</button>
+        <button class="primary-btn" id="btn-reveal" type="button">Mostra risposta</button>
+      </div>
+
+      <div class="award" id="award" hidden>
+        <p class="award-title">Chi ha indovinato? <span id="award-points"></span></p>
+        <div class="award-teams" id="award-teams"></div>
+        <button class="primary-btn" id="btn-next" type="button">Avanti →</button>
+      </div>
+      <p class="kbd-help">Tastiera: <kbd>Spazio</kbd> mostra/avanti · <kbd>1</kbd>–<kbd>8</kbd> squadre · <kbd>H</kbd> aiuto</p>
+    </section>
+
+    <!-- Fine partita -->
+    <section class="panel end" id="end" hidden>
+      <div class="end-emoji" aria-hidden="true">🏆</div>
+      <h1 id="end-title"></h1>
+      <ol class="end-list" id="end-list"></ol>
+      <div class="play-actions">
+        <button class="secondary-btn" id="btn-again" type="button">↺ Gioca ancora</button>
+        <a class="primary-btn" href="./">Torna ai giochi</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="score-strip" id="score-strip" aria-label="Punteggi"></footer>
+
+  <script src="js/storage.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/teams.js"></script>
+  <script src="js/data/paesi.js"></script>
+  <script src="js/data/parole.js"></script>
+  <script src="js/data/emoji.js"></script>
+  <script src="js/data/verofalso.js"></script>
+  <script src="js/games.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/play.js"></script>
+</body>
+</html>
