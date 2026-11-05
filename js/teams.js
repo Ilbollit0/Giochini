@@ -4,7 +4,13 @@ window.Teams = (() => {
   const DEFAULT_NAMES = ['Arancioni', 'Blu', 'Gialli', 'Verdi', 'Viola', 'Rosa', 'Azzurri', 'Grigi'];
   const MAX_TEAMS = 8;
 
-  let teams = Store.get('teams', null) || [makeTeam(0), makeTeam(1)];
+  let teams = Store.get('teams', null);
+  // Al primo avvio le squadre predefinite vanno salvate subito: altrimenti ogni pagina
+  // ne creerebbe di nuove, con identificativi diversi (e si perderebbero canzoni e ordine).
+  if (!teams) {
+    teams = [makeTeam(0), makeTeam(1)];
+    Store.set('teams', teams);
+  }
   const listeners = [];
 
   // Squadre salvate con la vecchia palette: riassegna i colori attuali.

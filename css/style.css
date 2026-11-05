@@ -1163,3 +1163,240 @@ html.perf-low .photo-frame.loading { animation: none; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   body::before { animation: none; }
 }
+
+/* ============================================================
+   ROUND A PRENOTAZIONE, 3-2-1, CANZONI, MAPPA
+   ============================================================ */
+/* ---------- Prenotazione ---------- */
+.buzz {
+  --team: var(--accent);
+  margin: 1.4rem auto 0;
+  max-width: 46rem;
+  padding: 1rem 1.2rem 1.1rem;
+  border-radius: var(--radius);
+  background: var(--glass);
+  border: 1px solid var(--line);
+  text-align: center;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+}
+.buzz.has-selected {
+  border-color: var(--team);
+  background: linear-gradient(135deg, color-mix(in oklab, var(--team), transparent 80%), var(--glass));
+  box-shadow: 0 0 40px -14px var(--team);
+}
+.buzz-title { margin: 0 0 0.7rem; font-weight: 800; font-size: 1.05rem; }
+.buzz-title b { color: var(--team); }
+.buzz-teams { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+.buzz-btn {
+  --team: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  min-height: 3rem;
+  padding: 0.55em 1.1em 0.55em 0.55em;
+  border-radius: 999px;
+  border: 2px solid color-mix(in oklab, var(--team), transparent 40%);
+  background: color-mix(in oklab, var(--team), transparent 85%);
+  font-weight: 800;
+  font-size: 1.05rem;
+  transition: transform 0.2s var(--ease-spring), background 0.2s, opacity 0.2s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.buzz-btn:hover:not(:disabled) { transform: translateY(-2px) scale(1.03); background: color-mix(in oklab, var(--team), transparent 70%); }
+.buzz-btn[aria-pressed='true'] { background: var(--team); color: #0b0b1a; box-shadow: 0 0 26px -4px var(--team); transform: scale(1.06); }
+.buzz-btn[aria-pressed='true'] .award-key { background: #0b0b1a; color: var(--team); }
+.buzz-btn.out { opacity: 0.35; text-decoration: line-through; filter: grayscale(0.6); }
+.buzz-btn:disabled { cursor: not-allowed; }
+.buzz.has-selected .buzz-btn:not([aria-pressed='true']):not(.out) { opacity: 0.55; }
+.buzz-answer { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.6rem; margin-top: 0.9rem; animation: rise 0.35s var(--ease-out) both; }
+.buzz-help { margin: 0; width: 100%; color: var(--muted); font-weight: 600; }
+.ghost-btn.small { padding: 0.5em 1em; font-size: 0.9rem; }
+#ask-actions { margin-top: 1rem; }
+
+/* ---------- 3, 2, 1 sopra la domanda ---------- */
+.count-in {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: radial-gradient(circle at center, rgba(20, 20, 60, 0.78), rgba(5, 5, 20, 0.92));
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  animation: fade-in 0.2s ease both;
+}
+.count-in-num {
+  font-family: var(--display);
+  font-size: clamp(5rem, 16vw, 9rem);
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.count-in-num.go { animation: count 0.65s var(--ease-out) both; }
+#custom { min-height: 20rem; }
+.timer.paused .timer-bar { background: var(--muted); }
+.timer.paused .timer-num::after { content: ' ⏸'; font-size: 0.7em; }
+
+/* ---------- Cruciverba: definizione in grande ---------- */
+.cw-current {
+  margin: 0 0 1.2rem;
+  padding: 1rem 1.4rem;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, color-mix(in oklab, var(--accent), transparent 78%), var(--glass));
+  border: 1px solid color-mix(in oklab, var(--accent), transparent 50%);
+  text-align: center;
+}
+.cw-current.enter { animation: pop 0.45s var(--ease-spring) both; }
+.cw-current .clue-text { font-family: var(--display); font-size: clamp(1.3rem, 3.6vw, 2.2rem); font-weight: 700; line-height: 1.25; margin: 0.3rem 0 0; }
+.cw-solution { margin: 0.6rem 0 0; font-size: 1.2rem; color: var(--muted); }
+.cw-solution b { font-family: var(--display); letter-spacing: 0.12em; color: var(--text); }
+.cw-panel .buzz { margin-top: 0; background: transparent; border-color: transparent; padding: 0.2rem 0 0.6rem; }
+.cw-panel .buzz.has-selected { border-color: var(--team); padding: 0.8rem; }
+.cw-clues .st-hint { margin: 0; }
+
+/* ---------- Impiccato ---------- */
+.hm-buzz { margin-top: 1.2rem; }
+.hm-buzz .buzz { margin-top: 0.4rem; }
+.hm-buzz .st-hint { text-align: center; }
+
+/* ---------- Canzone della vittoria ---------- */
+.team { grid-template-areas: 'rank color name score' 'song song controls controls'; }
+.team-song {
+  grid-area: song;
+  justify-self: start;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.3em 0.75em;
+  border-radius: 999px;
+  border: 1px dashed var(--line-2);
+  background: transparent;
+  color: var(--faint);
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.team-song:hover { color: var(--text); border-color: var(--team); }
+.team-song.set { border-style: solid; border-color: color-mix(in oklab, var(--team), transparent 40%); color: var(--text); background: color-mix(in oklab, var(--team), transparent 85%); }
+.team-song-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 11rem; }
+.song-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.45rem; max-height: 45vh; overflow: auto; text-align: left; }
+.song-list li { display: flex; gap: 0.4rem; align-items: center; }
+.song-pick {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  padding: 0.6rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--glass);
+  text-align: left;
+  font-weight: 700;
+  transition: background 0.2s, border-color 0.2s;
+}
+.song-pick small { color: var(--faint); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.song-pick:hover { background: var(--glass-2); }
+.song-pick[aria-pressed='true'] { border-color: var(--accent); background: color-mix(in oklab, var(--accent), transparent 75%); }
+.song-pick[aria-pressed='true'] span::before { content: '✓ '; color: var(--ok); }
+.song-empty { font-size: 0.9rem; }
+.song-empty code { padding: 0.1em 0.35em; border-radius: 6px; background: var(--glass-2); color: var(--text); }
+.file-btn { cursor: pointer; }
+.song-toast {
+  --team: var(--accent);
+  position: fixed;
+  z-index: 90;
+  left: 0;
+  right: 0;
+  top: 1rem;
+  width: fit-content;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.55rem 0.6rem 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(12, 12, 34, 0.92);
+  border: 1.5px solid var(--team);
+  box-shadow: 0 10px 40px -10px var(--team);
+  backdrop-filter: blur(10px);
+  animation: rise 0.5s var(--ease-spring) both;
+}
+.song-disc { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--team); animation: spin 3s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.song-info { display: grid; min-width: 0; line-height: 1.2; }
+.song-info small { color: var(--muted); font-weight: 600; }
+.song-info b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.song-stop { padding: 0.5em 1em; border-radius: 999px; border: 1px solid var(--line-2); background: var(--glass-2); font-weight: 800; }
+.song-stop:hover { background: var(--bad); border-color: var(--bad); }
+
+/* ---------- Mappa di "Che momento è?" ---------- */
+.st-map-wrap { position: relative; }
+.st-map { height: clamp(280px, 44vh, 440px); background: #b5d0e4; }
+.st-map .leaflet-container { background: #b5d0e4; }
+.st-map.reveal { height: clamp(320px, 56vh, 560px); }
+.map-views {
+  position: absolute;
+  z-index: 500;
+  top: 0.6rem;
+  left: 0.6rem;
+  right: 3.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  pointer-events: none;
+}
+.map-views button, .map-grow {
+  pointer-events: auto;
+  padding: 0.35em 0.75em;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1b1d3a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s var(--ease-spring), background 0.2s;
+}
+.map-views button:hover, .map-grow:hover { transform: translateY(-1px); background: #fff; }
+.map-grow { position: absolute; z-index: 500; top: 0.6rem; right: 0.6rem; width: 2.4rem; height: 2.4rem; padding: 0; font-size: 1.1rem; }
+.st-map-wrap.big { position: fixed; z-index: 60; inset: 0.8rem; }
+.st-map-wrap.big .st-map { height: 100%; border-radius: 22px; }
+body.map-open { overflow: hidden; }
+body.map-open::after { content: ''; position: fixed; inset: 0; z-index: 59; background: rgba(3, 3, 15, 0.75); }
+.st-map .leaflet-bar { border: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
+.st-map .leaflet-bar a { width: 38px; height: 38px; line-height: 38px; font-size: 20px; color: #1b1d3a; }
+.st-map .leaflet-control-attribution { font-size: 10px; background: rgba(255, 255, 255, 0.75); color: #333; }
+.st-map .leaflet-control-attribution a { color: #234; }
+.map-drop { width: 32px; height: 44px; overflow: visible; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.45)); animation: drop 0.45s var(--ease-spring) both; }
+.map-drop path { fill: var(--team); stroke: #fff; stroke-width: 2.5; }
+.map-drop circle { fill: #fff; }
+@keyframes drop { from { transform: translateY(-22px) scale(0.6); opacity: 0; } }
+.map-truth { position: relative; width: 44px; height: 44px; display: grid; place-items: center; }
+.map-truth span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 3px solid #fff;
+  color: #5a3d00;
+  font-size: 18px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  animation: pop 0.6s var(--ease-spring) both;
+}
+.map-truth::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--gold); opacity: 0.5; animation: pulse-map 1.8s ease-out infinite; }
+@keyframes pulse-map { from { transform: scale(0.6); opacity: 0.7; } to { transform: scale(1.8); opacity: 0; } }
+.map-line { animation: dash 1.2s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -22; } }
+.leaflet-tooltip.map-tip { padding: 0.25em 0.6em; border: 0; border-radius: 999px; background: rgba(12, 12, 34, 0.88); color: #fff; font: 600 12px var(--body); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); }
+.leaflet-tooltip.map-tip.truth { background: var(--gold); color: #3a2800; font-weight: 800; }
+.leaflet-tooltip.map-tip::before { display: none; }
+html.perf-low .map-line, html.perf-low .map-truth::before { animation: none; }

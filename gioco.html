@@ -51,7 +51,7 @@
     <!-- Testata durante il gioco: avanzamento, turno, timer -->
     <div class="panel hud" id="hud" hidden style="padding:1rem 1.4rem;margin-bottom:1rem">
       <div class="play-head" style="margin:0">
-        <span class="turn-pill" id="turn-pill" hidden><span class="dot"></span><span><small>Tocca a</small> <span id="turn-name"></span></span></span>
+        <span class="turn-pill" id="turn-pill" hidden><span class="dot"></span><span><small id="turn-label">Risponde</small> <span id="turn-name"></span></span></span>
         <span class="q-progress" id="q-progress"></span>
         <span class="q-tag" id="q-tag" hidden></span>
         <div class="timer" id="timer" hidden>
@@ -79,24 +79,22 @@
         </div>
       </div>
 
+      <div id="buzz-box"></div>
+
       <div class="play-actions" id="ask-actions">
         <button class="secondary-btn" id="btn-hint" type="button">💡 Aiuto</button>
-        <button class="primary-btn" id="btn-reveal" type="button">Mostra risposta</button>
+        <button class="ghost-btn" id="btn-reveal" type="button">🤷 Nessuno lo sa · Mostra risposta</button>
       </div>
 
       <div class="award" id="award" hidden>
         <p class="award-title" id="award-title"></p>
-        <div class="award-main">
-          <button class="verdict-btn yes" id="btn-yes" type="button" aria-pressed="false">✓ Giusta</button>
-          <button class="verdict-btn no" id="btn-no" type="button" aria-pressed="false">✕ Sbagliata</button>
-        </div>
-        <p class="award-others">Ha risposto un’altra squadra? Assegna il punto:</p>
+        <p class="award-others">Per correggere, tocca le squadre che hanno indovinato:</p>
         <div class="award-teams" id="award-teams"></div>
         <div class="play-actions" style="margin-top:1.2rem">
           <button class="primary-btn big" id="btn-next" type="button">Avanti →</button>
         </div>
       </div>
-      <p class="kbd-help">Tastiera: <kbd>Spazio</kbd> mostra/avanti · <kbd>A</kbd>–<kbd>D</kbd> risposte · <kbd>1</kbd>–<kbd>8</kbd> squadre · <kbd>H</kbd> aiuto</p>
+      <p class="kbd-help">Tastiera: <kbd>1</kbd>–<kbd>8</kbd> squadra prenotata · <kbd>A</kbd>–<kbd>D</kbd> risposta · <kbd>V</kbd> giusta · <kbd>X</kbd> sbagliata · <kbd>H</kbd> aiuto · <kbd>Spazio</kbd> mostra/avanti</p>
     </section>
 
     <!-- Giochi con interfaccia propria -->
@@ -125,6 +123,9 @@
   <script src="js/order.js"></script>
   <script src="js/tournament.js"></script>
   <script src="js/fx.js"></script>
+  <script src="js/buzz.js"></script>
+  <script src="js/songs.js"></script>
+  <script src="js/data/canzoni.js"></script>
   <script src="js/data/paesi.js"></script>
   <script src="js/data/parole.js"></script>
   <script src="js/data/emoji.js"></script>
@@ -134,6 +135,7 @@
   <script src="js/data/momenti.js"></script>
   <script src="js/data/storico.js"></script>
   <script src="js/data/cruciverba.js"></script>
+  <script src="js/data/cultura.js"></script>
   <script src="js/games.js"></script>
   <script src="js/games/storico.js"></script>
   <script src="js/games/impiccato.js"></script>
