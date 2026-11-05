@@ -15,12 +15,34 @@ window.U = {
     return a;
   },
   // Mazzo che pesca senza ripetizioni finché non lo ha esaurito.
-  deck(items) {
+  // Con `key` ricorda nel browser cosa è già uscito: le domande non si ripetono
+  // tra una partita e l'altra finché non sono state usate tutte.
+  deck(items, key) {
+    const ids = items.map((x) => U.hash(JSON.stringify(x)));
+    const storeKey = key && 'seen:' + key;
+    let seen = new Set(storeKey ? Store.get(storeKey, []) : []);
     let pile = [];
-    return () => {
-      if (!pile.length) pile = U.shuffle(items);
-      return pile.pop();
+    const refill = () => {
+      let fresh = items.map((_, i) => i).filter((i) => !seen.has(ids[i]));
+      if (!fresh.length) {
+        seen = new Set();
+        fresh = items.map((_, i) => i);
+      }
+      pile = U.shuffle(fresh);
     };
+    return () => {
+      if (!pile.length) refill();
+      const i = pile.pop();
+      seen.add(ids[i]);
+      if (storeKey) Store.set(storeKey, [...seen]);
+      return items[i];
+    };
+  },
+  // Impronta corta di una stringa (per riconoscere le domande già uscite).
+  hash(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+    return (h >>> 0).toString(36);
   },
   // La risposta giusta più tre alternative prese da `pool`.
   choicesFrom(answer, pool, n = 4) {

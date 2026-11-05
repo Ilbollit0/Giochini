@@ -85,6 +85,7 @@
 
   const cellsOf = (w) => [...w.word].map((ch, k) => [w.dir === 'a' ? w.r : w.r + k, w.dir === 'a' ? w.c + k : w.c, ch]);
 
+
   GAMES.push({
     id: 'cruciverba',
     rank: 6,
@@ -93,18 +94,19 @@
     title: 'Cruciverba',
     emoji: '✏️',
     color: '#2fd4c9',
-    desc: 'Uno schema sempre nuovo: a turno scegliete una definizione e risolvetela.',
-    options: [{ key: 'size', label: 'Schema', values: [[8, 'Piccolo'], [12, 'Medio'], [16, 'Grande']], default: 12 }],
-    common: ['timer', 'points'],
+    desc: 'Uno schema sempre nuovo: arriva una definizione, chi si prenota per primo risponde.',
+    options: [{ key: 'size', label: 'Schema', values: [[8, 'Piccolo (8 parole)'], [12, 'Medio (12)'], [16, 'Grande (16)']], default: 12, fromTour: 'questions' }],
+    common: ['timer', 'points', 'penalty'],
 
     mount(ctx) {
       const root = ctx.el;
       const puzzle = generate(CRUCIVERBA, ctx.opts.size);
       const { words, rows, cols } = puzzle;
-      const solvedBy = new Map(); // word → team
-      const shown = new Map(); // "r,c" → colore squadra o '' (lettera di aiuto)
-      let turnIndex = 0;
+      const solvedBy = new Map(); // parola → squadra (null = nessuno)
+      const shown = new Map(); // "r,c" → colore squadra o '' (lettera di aiuto / non indovinata)
       let active = null;
+      let token = 0;
+      let ready = false;
 
       const gridEl = el('div', { className: 'cw-grid' });
       gridEl.style.gridTemplateColumns = `repeat(${cols}, auto)`;
@@ -124,26 +126,43 @@
       const letterAt = {};
       words.forEach((w) => cellsOf(w).forEach(([r, c, ch]) => (letterAt[r + ',' + c] = ch)));
 
+      // Definizione in corso, in grande, sopra lo schema.
+      const clueBox = el('div', { className: 'cw-current' });
       const panel = el('div', { className: 'cw-panel' });
       const across = el('ol');
       const down = el('ol');
       const clueBtns = new Map();
       words.forEach((w) => {
-        const b = el('button', { type: 'button', className: 'cw-clue' }, el('b', { textContent: w.num }), el('span', { textContent: w.clue }), el('span', { className: 'len', textContent: `${w.word.length} lettere` }));
-        b.addEventListener('click', () => select(w));
+        const b = el('button', { type: 'button', className: 'cw-clue', title: 'Gioca questa definizione' }, el('b', { textContent: w.num }), el('span', { textContent: w.clue }), el('span', { className: 'len', textContent: `${w.word.length} lettere` }));
+        b.addEventListener('click', () => ask(w));
         clueBtns.set(w, b);
         (w.dir === 'a' ? across : down).append(el('li', {}, b));
       });
       const endBtn = el('button', { type: 'button', className: 'ghost-btn', textContent: 'Termina partita' });
       endBtn.addEventListener('click', () => confirm('Terminare il cruciverba adesso?') && done());
       root.replaceChildren(
+        clueBox,
         el('div', { className: 'cw-layout' },
           el('div', {}, gridEl, panel),
           el('div', { className: 'cw-clues' },
+            el('p', { className: 'st-hint', textContent: 'Le definizioni arrivano da sole; toccane una per sceglierla tu.' }),
             el('div', {}, el('h3', { textContent: 'Orizzontali →' }), across),
             el('div', {}, el('h3', { textContent: 'Verticali ↓' }), down),
             endBtn))
       );
+
+      const buzz = ctx.buzz({
+        onBuzz: (team) => {
+          if (!ready) return false;
+          ctx.pauseTimer();
+          ctx.setTurn(team);
+        },
+        onCancel: () => {
+          ctx.setTurn(null);
+          ctx.resumeTimer();
+        },
+        onVerdict: (team, right) => verdict(team, right),
+      });
 
       function paint() {
         for (const id in cellEls) {
@@ -159,28 +178,28 @@
           b.disabled = solvedBy.has(w);
         }
         const solved = solvedBy.size;
-        ctx.setProgress(`Parole trovate ${solved} di ${words.length}`, solved / words.length);
+        ctx.setProgress(`Parole ${solved} di ${words.length}`, solved / words.length);
       }
 
-      function turnTeam() {
-        return ctx.teams[turnIndex % ctx.teams.length];
+      // La prossima definizione: preferisce le parole che incrociano lettere già scoperte.
+      function pickNext() {
+        const left = words.filter((w) => !solvedBy.has(w));
+        if (!left.length) return null;
+        const known = (w) => cellsOf(w).filter(([r, c]) => shown.has(r + ',' + c)).length;
+        const best = Math.max(...left.map(known));
+        return U.pick(left.filter((w) => known(w) === best || Math.random() < 0.35));
       }
-      function idle() {
-        active = null;
-        ctx.stopTimer();
-        ctx.setTurn(turnTeam());
-        panel.replaceChildren(el('p', { className: 'clue-text', textContent: `${ctx.teams.length > 1 ? turnTeam().name + ': s' : 'S'}cegli una definizione dall’elenco` }));
-        paint();
-      }
-      function select(w) {
-        if (solvedBy.has(w)) return;
+
+      async function ask(w) {
+        if (!w || solvedBy.has(w)) return;
+        const my = ++token;
         active = w;
+        ready = false;
+        ctx.stopTimer();
+        ctx.setTurn(null);
         FX.sound('pop');
-        const yes = el('button', { type: 'button', className: 'verdict-btn yes', textContent: '✓ Giusta' });
-        const no = el('button', { type: 'button', className: 'verdict-btn no', textContent: '✕ Sbagliata' });
         const help = el('button', { type: 'button', className: 'secondary-btn', textContent: '💡 Una lettera' });
-        yes.addEventListener('click', () => verdict(true));
-        no.addEventListener('click', () => verdict(false));
+        const skip = el('button', { type: 'button', className: 'ghost-btn', textContent: '🤷 Nessuno lo sa · Mostra' });
         help.addEventListener('click', () => {
           const hidden = cellsOf(w).filter(([r, c]) => !shown.has(r + ',' + c));
           if (hidden.length <= 1) return;
@@ -190,43 +209,67 @@
           paint();
           if (hidden.length <= 2) help.disabled = true;
         });
-        panel.replaceChildren(
+        skip.addEventListener('click', () => ready && verdict(null, false));
+        clueBox.replaceChildren(
           el('div', { className: 'q-answer-label', textContent: `${w.num} ${w.dir === 'a' ? 'orizzontale' : 'verticale'} · ${w.word.length} lettere` }),
-          el('p', { className: 'clue-text', textContent: w.clue }),
-          el('div', { className: 'award-main' }, help, yes, no)
+          el('p', { className: 'clue-text', textContent: w.clue })
         );
-        ctx.startTimer(ctx.opts.timer, () => verdict(false));
+        clueBox.classList.remove('enter');
+        void clueBox.offsetWidth;
+        clueBox.classList.add('enter');
+        buzz.reset();
+        panel.replaceChildren(buzz.el, el('div', { className: 'play-actions' }, help, skip));
+        paint();
+        await ctx.countIn(root);
+        if (my !== token) return;
+        ready = true;
+        ctx.startTimer(ctx.opts.timer, () => verdict(null, false));
+      }
+
+      // team = null: tempo scaduto o nessuno lo sa → la parola si scopre senza punti.
+      function verdict(team, right) {
+        const w = active;
+        if (!w || !ready) return;
+        if (team && !right) {
+          FX.sound('wrong');
+          if (ctx.opts.penalty) ctx.award(team.id, -ctx.opts.penalty);
+          ctx.setTurn(null);
+          if (buzz.available().length) return ctx.resumeTimer();
+          team = null;
+        }
+        ready = false;
+        ctx.stopTimer();
+        buzz.lock();
+        const winner = team && right ? team : null;
+        solvedBy.set(w, winner);
+        cellsOf(w).forEach(([r, c], k) => {
+          const id = r + ',' + c;
+          if (!shown.get(id)) shown.set(id, winner ? winner.color : '');
+          const cell = cellEls[id];
+          cell.style.setProperty('--k', k);
+          cell.classList.remove('solved');
+          void cell.offsetWidth;
+          cell.classList.add('solved');
+        });
+        if (winner) {
+          ctx.setTurn(winner);
+          ctx.award(winner.id, ctx.opts.points, clueBox);
+          FX.sound('correct');
+          FX.confetti({ count: 40, colors: [winner.color, '#fff'] });
+        } else FX.sound('timeout');
+
+        const finished = solvedBy.size === words.length;
+        const nextBtn = el('button', { type: 'button', className: 'primary-btn big', textContent: finished ? 'Vedi i risultati 🏆' : 'Prossima definizione →' });
+        nextBtn.addEventListener('click', () => (finished ? done() : ask(pickNext())));
+        clueBox.append(el('p', { className: 'cw-solution' }, winner ? `✓ ${winner.name}: ` : 'Era: ', el('b', { textContent: w.word })));
+        panel.replaceChildren(el('div', { className: 'play-actions' }, nextBtn));
+        nextBtn.focus({ preventScroll: true });
+        active = null;
         paint();
       }
-      function verdict(right) {
-        if (!active) return;
-        const w = active;
-        const team = turnTeam();
-        ctx.stopTimer();
-        if (right) {
-          solvedBy.set(w, team);
-          cellsOf(w).forEach(([r, c], k) => {
-            const id = r + ',' + c;
-            if (!shown.get(id)) shown.set(id, team.color);
-            const cell = cellEls[id];
-            cell.style.setProperty('--k', k);
-            cell.classList.remove('solved');
-            void cell.offsetWidth;
-            cell.classList.add('solved');
-          });
-          ctx.award(team.id, ctx.opts.points, panel);
-          FX.sound('correct');
-          FX.confetti({ count: 40, colors: [team.color, '#fff'] });
-        } else {
-          FX.sound('wrong');
-        }
-        turnIndex++;
-        if (solvedBy.size === words.length) {
-          paint();
-          setTimeout(done, 900);
-        } else idle();
-      }
+
       function done() {
+        token++;
         ctx.stopTimer();
         // Mostra lo schema completo prima della classifica.
         words.forEach((w) => cellsOf(w).forEach(([r, c]) => shown.has(r + ',' + c) || shown.set(r + ',' + c, '')));
@@ -236,10 +279,16 @@
       }
 
       ctx.onKey((e, k, typing) => {
-        if (typing || !active) return;
-        if (k === 'enter' && !e.target.matches('button, a')) verdict(true);
+        if (typing) return;
+        if (ready && buzz.key(k)) return;
+        if (k === ' ' || (k === 'enter' && !e.target.matches('button, a'))) {
+          e.preventDefault();
+          if (ready) verdict(null, false);
+          else panel.querySelector('.play-actions .primary-btn')?.click();
+        }
       });
-      idle();
+      paint();
+      ask(pickNext());
     },
   });
 })();

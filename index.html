@@ -98,7 +98,7 @@
       <div id="tour-step-setup">
         <div class="modal-emoji" aria-hidden="true">🏆</div>
         <h2 id="tour-title">Nuovo torneo</h2>
-        <p>La ruota estrae i giochi e si passa dall'uno all'altro senza tornare al menù.<br>Ogni gioco assegna punti in base al piazzamento: 5 al primo, 3 al secondo, 2 al terzo, 1 al quarto.</p>
+        <p>La ruota estrae i giochi e si passa dall'uno all'altro senza tornare al menù. In ogni gioco si fanno più domande: tutte le squadre si prenotano a voce.<br>Ogni gioco assegna punti in base al piazzamento: 5 al primo, 3 al secondo, 2 al terzo, 1 al quarto.</p>
         <form id="tour-form" class="tour-options"></form>
         <div class="modal-actions">
           <button class="primary-btn big" id="btn-tour-draw" type="button">🎡 Estrai i giochi</button>
@@ -118,12 +118,29 @@
     </div>
   </dialog>
 
+  <!-- Canzone della vittoria -->
+  <dialog class="modal" id="song-modal" aria-labelledby="song-title">
+    <button class="modal-close" type="button" data-close aria-label="Chiudi">✕</button>
+    <div class="modal-body">
+      <div class="modal-emoji" aria-hidden="true">🎵</div>
+      <h2 id="song-title">Canzone della vittoria</h2>
+      <p id="song-text">Parte quando questa squadra vince una partita o il torneo.</p>
+      <ul class="song-list" id="song-list"></ul>
+      <p class="song-empty" id="song-empty">Nessuna canzone nella cartella <code>musica/</code>. Mettici i tuoi mp3 e scrivi i nomi in <code>js/data/canzoni.js</code>, oppure caricane uno qui sotto.</p>
+      <div class="modal-actions">
+        <label class="secondary-btn file-btn">📁 Carica un mp3 dal dispositivo<input type="file" id="song-file" accept="audio/*,.mp3" hidden></label>
+        <button class="ghost-btn" id="btn-song-none" type="button">Nessuna canzone</button>
+      </div>
+    </div>
+  </dialog>
+
   <template id="team-template">
     <li class="team">
       <span class="team-rank" aria-hidden="true"></span>
       <span class="team-color" aria-hidden="true"></span>
       <input class="team-name" type="text" maxlength="24" aria-label="Nome squadra" spellcheck="false">
       <div class="team-score" aria-live="polite"></div>
+      <button class="team-song" type="button" title="Canzone della vittoria"><span aria-hidden="true">🎵</span> <span class="team-song-name">Scegli canzone</span></button>
       <div class="team-controls">
         <button class="score-btn minus" type="button" data-delta="-1" aria-label="Togli un punto">−</button>
         <button class="score-btn plus" type="button" data-delta="1" aria-label="Aggiungi un punto">+</button>
@@ -138,6 +155,8 @@
   <script src="js/order.js"></script>
   <script src="js/tournament.js"></script>
   <script src="js/fx.js"></script>
+  <script src="js/songs.js"></script>
+  <script src="js/data/canzoni.js"></script>
   <script src="js/wheel.js"></script>
   <script src="js/data/paesi.js"></script>
   <script src="js/data/parole.js"></script>
@@ -148,6 +167,7 @@
   <script src="js/data/momenti.js"></script>
   <script src="js/data/storico.js"></script>
   <script src="js/data/cruciverba.js"></script>
+  <script src="js/data/cultura.js"></script>
   <script src="js/games.js"></script>
   <script src="js/games/storico.js"></script>
   <script src="js/games/impiccato.js"></script>

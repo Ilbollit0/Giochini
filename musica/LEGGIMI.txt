@@ -1,0 +1,9 @@
+Metti qui i file mp3 delle canzoni della vittoria.
+Poi aggiungi il nome di ogni file in js/data/canzoni.js, per esempio:
+
+window.CANZONI = [
+  'we-are-the-champions.mp3',
+  { file: 'canzone-blu.mp3', title: 'La canzone dei Blu' },
+];
+
+Nella pagina principale, tocca 🎵 accanto al nome della squadra per sceglierla.

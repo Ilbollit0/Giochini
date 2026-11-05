@@ -167,6 +167,40 @@ window.FX = (() => {
     });
   }
 
+  // ---------- 3, 2, 1 sopra la domanda ----------
+  // Copre `host` (che deve avere position: relative) e si salta con un clic o un tasto.
+  function countIn(host, from = 3) {
+    return new Promise((resolve) => {
+      if (!host) return resolve();
+      const box = document.createElement('div');
+      box.className = 'count-in';
+      const num = document.createElement('div');
+      num.className = 'count-in-num';
+      box.append(num);
+      host.append(box);
+      let n = from, timer;
+      const finish = () => {
+        clearTimeout(timer);
+        box.remove();
+        removeEventListener('keydown', finish);
+        resolve();
+      };
+      box.addEventListener('click', finish);
+      addEventListener('keydown', finish);
+      const tick = () => {
+        if (n < 0) return finish();
+        num.classList.remove('go');
+        void num.offsetWidth;
+        num.textContent = n > 0 ? n : 'VIA!';
+        num.classList.add('go');
+        n > 0 ? SOUNDS.count() : SOUNDS.go();
+        n--;
+        timer = setTimeout(tick, n < 0 ? 450 : 650);
+      };
+      tick();
+    });
+  }
+
   // ---------- Foto a tutto schermo ----------
   function lightbox(src, alt = '') {
     const box = document.createElement('div');
@@ -234,6 +268,7 @@ window.FX = (() => {
     floatText,
     flash,
     countdown,
+    countIn,
     lightbox,
     photo,
     preload,

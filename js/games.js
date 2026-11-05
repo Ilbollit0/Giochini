@@ -105,12 +105,38 @@
   }
 
   // ---------- Parole ----------
-  function wordDeck() {
-    return deck(Object.entries(PAROLE).flatMap(([cat, words]) => words.map((w) => ({ word: w, cat }))));
+  function wordDeck(key) {
+    return deck(Object.entries(PAROLE).flatMap(([cat, words]) => words.map((w) => ({ word: w, cat }))), key);
   }
   const spaced = (letters) => letters.join(' ');
 
   window.GAMES = [
+    {
+      id: 'cultura',
+      rank: 0,
+      isNew: true,
+      title: 'Cultura generale',
+      emoji: '🧠',
+      color: '#8b7bff',
+      desc: 'Storia, geografia, scienza, arte, sport e spettacolo: oltre 100 domande.',
+      options: [
+        { key: 'cat', label: 'Argomento', values: [['tutte', 'Tutti'], ...[...new Set(CULTURA.map((x) => x[0]))].map((c) => [c, c])], default: 'tutte' },
+        MODE,
+      ],
+      create(o) {
+        const pool = o.cat === 'tutte' ? CULTURA : CULTURA.filter((x) => x[0] === o.cat);
+        const next = deck(pool, 'cultura');
+        return () => {
+          const [cat, question, answer, wrong, explain] = next();
+          return withMode(
+            { tag: cat, prompt: '', big: question, answer, explain: explain || '' },
+            o.mode,
+            // Le risposte escono ogni volta in un ordine diverso.
+            () => shuffle([answer, ...wrong.slice(0, 3)])
+          );
+        };
+      },
+    },
 
     {
       id: 'foto',
@@ -127,7 +153,7 @@
       create(o) {
         const PROMPT = { Monumenti: 'Che monumento è?', Cibi: 'Che piatto è?', Stadi: 'Che stadio è?' };
         const cats = o.cat === 'tutte' ? Object.keys(FOTO_QUIZ) : [o.cat];
-        const next = deck(cats.flatMap((cat) => FOTO_QUIZ[cat].map((x) => ({ ...x, cat }))));
+        const next = deck(cats.flatMap((cat) => FOTO_QUIZ[cat].map((x) => ({ ...x, cat }))), 'foto');
         return () => {
           const x = next();
           return withMode(
@@ -151,8 +177,8 @@
         MODE,
       ],
       create(o) {
-        const pool = o.tipo === 'foto' ? CALCIATORI.filter((p) => p.img) : CALCIATORI;
-        const next = deck(pool);
+        const pool = o.tipo === 'foto' ? CALCIATORI.filter((p) => p.img) : CALCIATORI.filter((p) => p.career?.length >= 3);
+        const next = deck(pool, 'calciatore-' + o.tipo);
         const initials = (name) => name.replace(/\(.*\)/, '').trim().split(/\s+/).map((w) => w[0] + '.').join(' ');
         const clubs = (p) => [...new Set(p.career.map((c) => c[1]))];
         return () => {
@@ -187,7 +213,7 @@
       desc: 'Finali e partite leggendarie: riconosci il momento dalla foto.',
       options: [MODE],
       create(o) {
-        const next = deck(MOMENTI_CALCIO);
+        const next = deck(MOMENTI_CALCIO, 'momenti-calcio');
         return () => {
           const m = next();
           return withMode(
@@ -237,7 +263,7 @@
       ],
       create(o) {
         const pool = PAESI.filter((p) => p.level <= Number(o.level));
-        const next = deck(pool);
+        const next = deck(pool, 'bandiere');
         return () => {
           const p = next();
           return withMode(
@@ -262,7 +288,7 @@
       ],
       create(o) {
         const pool = PAESI.filter((p) => p.level <= Number(o.level));
-        const next = deck(pool);
+        const next = deck(pool, 'capitali');
         const toCapital = o.dir === 'capitale';
         return () => {
           const p = next();
@@ -288,7 +314,7 @@
       desc: 'Lettere nascoste e aiuti: trova la parola.',
       options: [],
       create() {
-        const next = wordDeck();
+        const next = wordDeck('parola');
         return () => {
           const { word, cat } = next();
           const letters = [...word];
@@ -319,7 +345,7 @@
       desc: 'Lettere mescolate: rimettile in ordine.',
       options: [],
       create() {
-        const next = wordDeck();
+        const next = wordDeck('anagrammi');
         return () => {
           const { word, cat } = next();
           let mixed;
@@ -353,7 +379,7 @@
       ],
       create(o) {
         const cats = o.cat === 'tutte' ? Object.keys(EMOJI_QUIZ) : [o.cat];
-        const next = deck(cats.flatMap((cat) => EMOJI_QUIZ[cat].items.map(([emoji, answer]) => ({ cat, emoji, answer }))));
+        const next = deck(cats.flatMap((cat) => EMOJI_QUIZ[cat].items.map(([emoji, answer]) => ({ cat, emoji, answer }))), 'emoji');
         return () => {
           const item = next();
           const { prompt, items } = EMOJI_QUIZ[item.cat];
@@ -374,7 +400,7 @@
       desc: 'Curiosità incredibili: sono vere o no?',
       options: [],
       create() {
-        const next = deck(VERO_FALSO);
+        const next = deck(VERO_FALSO, 'vero-falso');
         return () => {
           const [text, isTrue, explain] = next();
           return { prompt: 'Vero o falso?', big: text, choices: ['Vero', 'Falso'], answer: isTrue ? 'Vero' : 'Falso', explain };

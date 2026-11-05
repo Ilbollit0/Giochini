@@ -31,9 +31,10 @@
       card.style.setProperty('--rx', '0deg');
       card.style.setProperty('--ry', '0deg');
     });
-    // Prima di giocare serve l'ordine delle squadre.
+    // I giochi a turni hanno bisogno dell'ordine delle squadre.
     card.addEventListener('click', (e) => {
-      if (needsOrder()) {
+      Songs.stop();
+      if (game.turnBased && needsOrder()) {
         e.preventDefault();
         openOrder(() => (location.href = card.href));
       }
@@ -66,6 +67,9 @@
         node.querySelector('.team-name').value = team.name;
         node.querySelector('.team-score').textContent = team.score;
         node.querySelector('.remove-btn').hidden = teams.length <= 1;
+        const song = Songs.get(team.id);
+        node.querySelector('.team-song-name').textContent = song ? song.title : 'Scegli canzone';
+        node.querySelector('.team-song').classList.toggle('set', !!song);
         return node;
       })
     );
@@ -89,6 +93,8 @@
       Teams.addPoints(row.dataset.id, Number(scoreBtn.dataset.delta));
       bump(row.dataset.id);
       FX.sound('pop');
+    } else if (e.target.closest('.team-song')) {
+      openSong(row.dataset.id);
     } else if (e.target.closest('.remove-btn')) {
       const name = row.querySelector('.team-name').value;
       if (confirm(`Eliminare "${name}"?`)) Teams.remove(row.dataset.id);
@@ -122,6 +128,66 @@
     render(Teams.all());
   });
 
+  // ---------- Canzone della vittoria ----------
+  const songModal = $('#song-modal');
+  let songTeam = null;
+  function openSong(teamId) {
+    songTeam = Teams.all().find((t) => t.id === teamId);
+    if (!songTeam) return;
+    $('#song-title').textContent = `Canzone di ${songTeam.name}`;
+    songModal.style.setProperty('--accent', songTeam.color);
+    renderSongs();
+    songModal.showModal();
+  }
+  function renderSongs() {
+    const current = Songs.get(songTeam.id);
+    const lib = Songs.library();
+    // Il file caricato dal dispositivo compare in cima alla lista.
+    const items = [...(current?.key ? [current] : []), ...lib];
+    $('#song-empty').hidden = items.length > 0;
+    $('#song-list').replaceChildren(
+      ...items.map((song) => {
+        const chosen = current && (song.key ? song.key === current.key : song.file === current.file);
+        const play = el('button', { type: 'button', className: 'ghost-btn small', textContent: '▶', title: 'Ascolta' });
+        const pick = el('button', { type: 'button', className: 'song-pick', ariaPressed: String(!!chosen) },
+          el('span', { textContent: song.title }),
+          el('small', { textContent: song.key ? 'dal dispositivo' : song.file }));
+        play.addEventListener('click', async () => {
+          if (!(await Songs.preview(song))) alert('Non riesco a riprodurre questo file. Controlla che sia nella cartella musica/ con lo stesso nome.');
+        });
+        pick.addEventListener('click', async () => {
+          await Songs.set(songTeam.id, song.key ? current : { file: song.file, title: song.title });
+          FX.sound('pop');
+          renderSongs();
+          render(Teams.all());
+        });
+        return el('li', {}, pick, play);
+      })
+    );
+  }
+  $('#song-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file || !songTeam) return;
+    try {
+      const song = await Songs.upload(file);
+      await Songs.set(songTeam.id, song);
+      FX.sound('correct');
+      renderSongs();
+      render(Teams.all());
+      Songs.preview(song);
+    } catch {
+      alert('Non è stato possibile salvare il file in questo browser.');
+    }
+  });
+  $('#btn-song-none').addEventListener('click', async () => {
+    await Songs.set(songTeam.id, null);
+    Songs.stop();
+    renderSongs();
+    render(Teams.all());
+  });
+  songModal.addEventListener('close', () => Songs.stop());
+
   // ---------- Ordine di gioco ----------
   function renderOrderBar() {
     const bar = $('#order-bar');
@@ -130,7 +196,7 @@
       return;
     }
     if (!Order.isSet()) {
-      bar.replaceChildren('🎡 L’ordine di gioco non è ancora deciso: gira la ruota prima di iniziare.');
+      bar.replaceChildren('🎡 Nei quiz ci si prenota a voce. L’ordine con la ruota serve solo per i giochi a turni, come «Che momento è?».');
       return;
     }
     bar.replaceChildren(
@@ -224,9 +290,10 @@
   const tourModal = $('#tour-modal');
   const tourWheel = new Wheel($('#tour-wheel'));
   const TOUR_OPTIONS = [
-    { key: 'count', label: 'Quanti giochi', values: [[3, '3'], [5, '5'], [7, '7'], [games.length, `Tutti (${games.length})`]], default: 5 },
-    { key: 'turns', label: 'Turni per squadra in ogni gioco', values: [[1, '1'], [2, '2'], [3, '3']], default: 2 },
-    { key: 'timer', label: 'Tempo per risposta', values: [[0, 'Nessuno'], [20, '20 s'], [30, '30 s'], [60, '60 s']], default: 30 },
+    { key: 'games', label: 'Quanti giochi', values: [[3, '3'], [5, '5'], [7, '7'], [10, '10'], [games.length, `Tutti (${games.length})`]], default: 5 },
+    { key: 'questions', label: 'Domande (round) per ogni gioco', values: [[5, '5'], [10, '10'], [15, '15'], [20, '20']], default: 10 },
+    { key: 'timer', label: 'Tempo per domanda', values: [[0, 'Nessuno'], [15, '15 s'], [20, '20 s'], [30, '30 s'], [60, '60 s']], default: 20 },
+    { key: 'repeat', label: 'Lo stesso gioco può uscire più volte', values: [[0, 'No'], [1, 'Sì']], default: 0 },
   ];
   const tourSaved = Store.get('tour-opts', {});
   TOUR_OPTIONS.forEach((opt) => {
@@ -255,18 +322,21 @@
     const data = new FormData($('#tour-form'));
     const settings = Object.fromEntries(TOUR_OPTIONS.map((o) => [o.key, Number(data.get(o.key))]));
     Store.set('tour-opts', settings);
-    const count = Math.min(settings.count, games.length);
+    const repeat = settings.repeat === 1;
+    const count = repeat ? settings.games : Math.min(settings.games, games.length);
     $('#tour-step-setup').hidden = true;
     $('#tour-step-draw').hidden = false;
     $('#btn-tour-start').hidden = true;
     $('#btn-tour-back').hidden = true;
     $('#tour-lineup').replaceChildren();
     $('#tour-result').replaceChildren();
-    $('#tour-draw-text').textContent = `La ruota sceglie ${count} giochi a caso.`;
+    $('#tour-draw-text').textContent = `La ruota sceglie ${count} giochi a caso${repeat ? ' (anche ripetuti)' : ''}.`;
 
     let pool = [...games];
     lineup = [];
     for (let k = 0; k < count; k++) {
+      // Con le ripetizioni la ruota ha tutti i giochi, tranne quello appena uscito.
+      if (repeat) pool = games.filter((g) => g.id !== lineup[lineup.length - 1]);
       tourWheel.setItems(pool.map((g) => ({ label: g.title, color: g.color, emoji: g.emoji })));
       await wait(k ? 500 : 250);
       const idx = pool.length > 1 ? await tourWheel.spin(undefined, { duration: count > 5 ? 2800 : 3800, turns: 4 }) : 0;
@@ -293,7 +363,8 @@
     Tour.create(lineup, settings);
     const go = () => (location.href = U.gameUrl(lineup[0], true));
     tourModal.close();
-    if (needsOrder()) openOrder(go);
+    const turnBased = lineup.some((id) => GAMES.find((g) => g.id === id)?.turnBased);
+    if (turnBased && needsOrder()) openOrder(go);
     else go();
   }
 
