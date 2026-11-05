@@ -25,6 +25,22 @@
   });
   paintMute();
 
+  // Qualità grafica: Auto → Alta → Media → Leggera.
+  const perfBtn = document.querySelector('#btn-perf');
+  const ORDER = ['auto', 'high', 'medium', 'low'];
+  function paintPerf() {
+    if (!perfBtn) return;
+    const label = Perf.pref === 'auto' ? `Auto (${Perf.LABELS[Perf.level]})` : Perf.LABELS[Perf.pref];
+    perfBtn.querySelector('.btn-label').textContent = 'Grafica: ' + label;
+    perfBtn.title = `Qualità grafica: ${label}. In "Auto" si adatta al dispositivo. Clic per cambiare.`;
+  }
+  perfBtn?.addEventListener('click', () => {
+    Perf.set(ORDER[(ORDER.indexOf(Perf.pref) + 1) % ORDER.length]);
+    FX.sound('pop');
+  });
+  addEventListener('perfchange', paintPerf);
+  paintPerf();
+
   if (fsBtn) {
     if (!document.fullscreenEnabled) fsBtn.hidden = true;
     fsBtn.addEventListener('click', () => {

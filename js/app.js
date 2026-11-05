@@ -16,8 +16,9 @@
       el('span', { className: 'game-desc', textContent: game.desc }),
       game.isNew ? el('span', { className: 'game-badge', textContent: 'Nuovo' }) : null
     );
-    // Effetto 3D che segue il mouse
+    // Effetto 3D che segue il mouse (solo con mouse e grafica alta)
     card.addEventListener('pointermove', (e) => {
+      if (!Perf.tilt) return;
       const r = card.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width;
       const y = (e.clientY - r.top) / r.height;

@@ -20,9 +20,13 @@
     });
   }
 
+  // Sui dispositivi lenti la mappa rinuncia alle animazioni di zoom e tiene meno tasselli in memoria.
+  const mapOpts = (extra) => ({ worldCopyJump: true, minZoom: 1, fadeAnimation: Perf.mapAnim, zoomAnimation: Perf.mapAnim, markerZoomAnimation: Perf.mapAnim, ...extra });
   function tiles(map) {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
+      keepBuffer: Perf.level === 'low' ? 1 : 2,
+      updateWhenZooming: Perf.mapAnim,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
   }
@@ -99,7 +103,7 @@
         root.replaceChildren(el('div', { className: 'st-layout' }, el('div', { className: 'st-photo' }, photoFrame), controls));
 
         map?.remove();
-        map = L.map(mapBox, { worldCopyJump: true, minZoom: 1, zoomSnap: 0.5 }).setView([25, 10], 1);
+        map = L.map(mapBox, mapOpts({ zoomSnap: 0.5 })).setView([25, 10], 1);
         tiles(map);
         map.on('click', (e) => {
           const ll = e.latlng.wrap();
@@ -181,7 +185,7 @@
             el('div', { className: 'st-controls' }, mapBox, list, el('div', { className: 'play-actions' }, nextBtn))));
 
         map?.remove();
-        map = L.map(mapBox, { worldCopyJump: true, minZoom: 1 });
+        map = L.map(mapBox, mapOpts());
         tiles(map);
         const truthLL = [item.lat, item.lng];
         const points = [truthLL];

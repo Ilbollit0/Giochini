@@ -100,8 +100,14 @@ window.Wheel = class {
     const ease = (t) => 1 - Math.pow(1 - t, 4);
     let lastSeg = Math.floor(start / a);
     const t0 = performance.now();
+    // La rotazione è il momento più pesante: i tempi dei fotogrammi servono a Perf
+    // per capire se il dispositivo regge gli effetti.
+    const deltas = [];
+    let prev = t0;
     return new Promise((resolve) => {
       const frame = (now) => {
+        deltas.push(now - prev);
+        prev = now;
         const t = Math.min(1, (now - t0) / dur);
         this.rotation = start + delta * ease(t);
         this.apply();
@@ -117,6 +123,7 @@ window.Wheel = class {
         else {
           this.rotation = end;
           this.spinning = false;
+          Perf.report(deltas.slice(2));
           resolve(index);
         }
       };

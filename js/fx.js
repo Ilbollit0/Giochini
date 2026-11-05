@@ -46,16 +46,21 @@ window.FX = (() => {
     document.body.append(canvas);
     ctx2d = canvas.getContext('2d');
     const size = () => {
-      canvas.width = innerWidth * devicePixelRatio;
-      canvas.height = innerHeight * devicePixelRatio;
+      scale = Perf.canvasDpr;
+      canvas.width = innerWidth * scale;
+      canvas.height = innerHeight * scale;
     };
     size();
     addEventListener('resize', size);
+    addEventListener('perfchange', size);
   }
+  let scale = 1;
+  // Il numero di coriandoli e la risoluzione del canvas dipendono dal livello grafico.
   function confetti({ count = 140, x = 0.5, y = 0.35, spread = 1, colors = COLORS } = {}) {
     if (reduced) return;
     ensureCanvas();
-    const dpr = devicePixelRatio;
+    count = Math.round(count * Perf.confetti);
+    const dpr = scale;
     for (let i = 0; i < count; i++) {
       const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * spread;
       const speed = (6 + Math.random() * 10) * dpr;
@@ -76,7 +81,7 @@ window.FX = (() => {
   }
   function step() {
     ctx2d.clearRect(0, 0, canvas.width, canvas.height);
-    const dpr = devicePixelRatio;
+    const dpr = scale;
     parts = parts.filter((p) => p.y < canvas.height + 40 && p.life < 400);
     for (const p of parts) {
       p.life++;
@@ -183,7 +188,11 @@ window.FX = (() => {
   }
 
   // Immagine con riquadro, caricamento animato e crediti mostrati dopo la risposta.
-  function photo(src, credit, alt = 'Foto da indovinare') {
+  // La foto viene scaricata alla larghezza adatta allo schermo e alla connessione (Perf.img);
+  // lo zoom a tutto schermo usa la versione salvata nei dati, tranne in modalità leggera.
+  function photo(full, credit, alt = 'Foto da indovinare') {
+    const src = Perf.img(full);
+    const big = Perf.level === 'low' || !Perf.preload ? src : full;
     const frame = document.createElement('figure');
     frame.className = 'photo-frame loading';
     frame.style.margin = '0 auto 1.2rem';
@@ -193,7 +202,7 @@ window.FX = (() => {
       frame.classList.remove('loading');
       img.alt = 'Immagine non disponibile (serve la connessione a internet)';
     });
-    img.addEventListener('click', () => lightbox(src, alt));
+    img.addEventListener('click', () => lightbox(big, alt));
     const cap = document.createElement('figcaption');
     cap.className = 'photo-credit';
     cap.hidden = true;
@@ -208,7 +217,7 @@ window.FX = (() => {
   }
 
   function preload(src) {
-    if (src) new Image().src = src;
+    if (src && Perf.preload) new Image().src = Perf.img(src);
   }
 
   return {
