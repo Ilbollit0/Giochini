@@ -3,12 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4f1ea">
+  <meta name="theme-color" content="#07081a">
   <title>Giochini</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="js/perf.js"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="game-page">
@@ -18,7 +20,9 @@
       <span class="brand-name" id="game-name">Giochini</span>
     </a>
     <div class="topbar-actions">
-      <button class="icon-btn" id="btn-tv" type="button" aria-pressed="false" title="Modalità TV: testi più grandi e alto contrasto per lo schermo condiviso">
+      <button class="icon-btn" id="btn-perf" type="button" title="Qualità grafica"><span aria-hidden="true">⚡</span><span class="btn-label">Grafica: Auto</span></button>
+      <button class="icon-btn" id="btn-mute" type="button" aria-pressed="true"><span aria-hidden="true">🔊</span><span class="btn-label">Audio</span></button>
+      <button class="icon-btn" id="btn-tv" type="button" aria-pressed="false" title="Modalità TV: testi più grandi per lo schermo condiviso">
         <span aria-hidden="true">📺</span><span class="btn-label">Modalità TV</span>
       </button>
       <button class="icon-btn" id="btn-fullscreen" type="button" title="Schermo intero">
@@ -29,7 +33,7 @@
 
   <main class="stage">
     <!-- Impostazioni prima di iniziare -->
-    <section class="panel setup" id="setup">
+    <section class="panel setup" id="setup" hidden>
       <div class="setup-head">
         <span class="setup-emoji" id="setup-emoji" aria-hidden="true"></span>
         <div>
@@ -41,23 +45,30 @@
         <div class="options" id="options"></div>
         <button class="primary-btn big" type="submit">Inizia ▶</button>
       </form>
-      <p class="setup-note">Le squadre si modificano dalla <a href="./">pagina principale</a>.</p>
+      <p class="setup-note" id="setup-note"></p>
     </section>
 
-    <!-- Partita -->
-    <section class="panel play" id="play" hidden>
-      <div class="play-head">
+    <!-- Testata durante il gioco: avanzamento, turno, timer -->
+    <div class="panel hud" id="hud" hidden style="padding:1rem 1.4rem;margin-bottom:1rem">
+      <div class="play-head" style="margin:0">
+        <span class="turn-pill" id="turn-pill" hidden><span class="dot"></span><span><small>Tocca a</small> <span id="turn-name"></span></span></span>
         <span class="q-progress" id="q-progress"></span>
         <span class="q-tag" id="q-tag" hidden></span>
         <div class="timer" id="timer" hidden>
           <div class="timer-track"><div class="timer-bar" id="timer-bar"></div></div>
           <span class="timer-num" id="timer-num"></span>
         </div>
+        <div class="progress-bar"><i id="progress-fill"></i></div>
       </div>
+    </div>
 
-      <div class="question">
+    <!-- Quiz classico -->
+    <section class="panel play" id="play" hidden>
+      <div class="question" id="question">
         <p class="q-prompt" id="q-prompt"></p>
         <img class="q-image" id="q-image" alt="Bandiera da indovinare" hidden>
+        <div id="q-photo"></div>
+        <ul class="q-career" id="q-career" hidden></ul>
         <div class="q-big" id="q-big" hidden></div>
         <ul class="q-hints" id="q-hints"></ul>
         <ol class="q-choices" id="q-choices"></ol>
@@ -74,19 +85,31 @@
       </div>
 
       <div class="award" id="award" hidden>
-        <p class="award-title">Chi ha indovinato? <span id="award-points"></span></p>
+        <p class="award-title" id="award-title"></p>
+        <div class="award-main">
+          <button class="verdict-btn yes" id="btn-yes" type="button" aria-pressed="false">✓ Giusta</button>
+          <button class="verdict-btn no" id="btn-no" type="button" aria-pressed="false">✕ Sbagliata</button>
+        </div>
+        <p class="award-others">Ha risposto un’altra squadra? Assegna il punto:</p>
         <div class="award-teams" id="award-teams"></div>
-        <button class="primary-btn" id="btn-next" type="button">Avanti →</button>
+        <div class="play-actions" style="margin-top:1.2rem">
+          <button class="primary-btn big" id="btn-next" type="button">Avanti →</button>
+        </div>
       </div>
-      <p class="kbd-help">Tastiera: <kbd>Spazio</kbd> mostra/avanti · <kbd>1</kbd>–<kbd>8</kbd> squadre · <kbd>H</kbd> aiuto</p>
+      <p class="kbd-help">Tastiera: <kbd>Spazio</kbd> mostra/avanti · <kbd>A</kbd>–<kbd>D</kbd> risposte · <kbd>1</kbd>–<kbd>8</kbd> squadre · <kbd>H</kbd> aiuto</p>
     </section>
+
+    <!-- Giochi con interfaccia propria -->
+    <section class="panel" id="custom" hidden></section>
 
     <!-- Fine partita -->
     <section class="panel end" id="end" hidden>
       <div class="end-emoji" aria-hidden="true">🏆</div>
       <h1 id="end-title"></h1>
+      <div class="podium" id="podium"></div>
       <ol class="end-list" id="end-list"></ol>
-      <div class="play-actions">
+      <div id="tour-end"></div>
+      <div class="play-actions" id="end-actions">
         <button class="secondary-btn" id="btn-again" type="button">↺ Gioca ancora</button>
         <a class="primary-btn" href="./">Torna ai giochi</a>
       </div>
@@ -95,14 +118,26 @@
 
   <footer class="score-strip" id="score-strip" aria-label="Punteggi"></footer>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="js/storage.js"></script>
   <script src="js/util.js"></script>
   <script src="js/teams.js"></script>
+  <script src="js/order.js"></script>
+  <script src="js/tournament.js"></script>
+  <script src="js/fx.js"></script>
   <script src="js/data/paesi.js"></script>
   <script src="js/data/parole.js"></script>
   <script src="js/data/emoji.js"></script>
   <script src="js/data/verofalso.js"></script>
+  <script src="js/data/foto.js"></script>
+  <script src="js/data/calciatori.js"></script>
+  <script src="js/data/momenti.js"></script>
+  <script src="js/data/storico.js"></script>
+  <script src="js/data/cruciverba.js"></script>
   <script src="js/games.js"></script>
+  <script src="js/games/storico.js"></script>
+  <script src="js/games/impiccato.js"></script>
+  <script src="js/games/cruciverba.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/play.js"></script>
 </body>

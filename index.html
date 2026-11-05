@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4f1ea">
+  <meta name="theme-color" content="#07081a">
   <title>Giochini</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="js/perf.js"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -18,7 +19,9 @@
       <span class="brand-name">Giochini</span>
     </a>
     <div class="topbar-actions">
-      <button class="icon-btn" id="btn-tv" type="button" aria-pressed="false" title="Modalità TV: testi più grandi e alto contrasto per lo schermo condiviso">
+      <button class="icon-btn" id="btn-perf" type="button" title="Qualità grafica"><span aria-hidden="true">⚡</span><span class="btn-label">Grafica: Auto</span></button>
+      <button class="icon-btn" id="btn-mute" type="button" aria-pressed="true"><span aria-hidden="true">🔊</span><span class="btn-label">Audio</span></button>
+      <button class="icon-btn" id="btn-tv" type="button" aria-pressed="false" title="Modalità TV: testi più grandi per lo schermo condiviso">
         <span aria-hidden="true">📺</span><span class="btn-label">Modalità TV</span>
       </button>
       <button class="icon-btn" id="btn-fullscreen" type="button" title="Schermo intero">
@@ -27,11 +30,34 @@
     </div>
   </header>
 
+  <section class="hero">
+    <span class="hero-kicker rise">🎉 Quiz a squadre per le serate con gli amici</span>
+    <h1 class="hero-title">Giochini</h1>
+    <p class="hero-sub rise" style="--i:2">Gira la ruota, sfidatevi a turno e scoprite chi vince il torneo.</p>
+    <div class="hero-actions rise" style="--i:3">
+      <button class="primary-btn huge" id="btn-tour" type="button" style="--c:#ff8a5c">🏆 Crea un torneo</button>
+      <button class="secondary-btn huge" id="btn-order" type="button">🎡 Ordine di gioco</button>
+    </div>
+    <div class="order-bar" id="order-bar" aria-live="polite"></div>
+  </section>
+
+  <div class="tour-banner" id="tour-banner" hidden>
+    <div class="tour-banner-inner">
+      <div>🏆 <strong>Torneo in corso</strong> · <span id="tour-banner-text"></span></div>
+      <div class="play-actions" style="margin:0">
+        <button class="ghost-btn" id="btn-tour-quit" type="button">Abbandona</button>
+        <a class="primary-btn" id="btn-tour-continue" href="#">Continua ▶</a>
+      </div>
+    </div>
+  </div>
+
   <main class="layout">
     <section class="games" aria-labelledby="games-title">
       <div class="section-head">
-        <h1 id="games-title">Scegli un gioco</h1>
-        <p class="subtitle">Sfida i tuoi amici a squadre: ogni risposta giusta vale punti.</p>
+        <div>
+          <h2 id="games-title">Tutti i giochi</h2>
+          <p class="subtitle">Una partita singola, oppure lasciali scegliere alla ruota con il torneo.</p>
+        </div>
       </div>
       <ul class="games-grid" id="games-grid"></ul>
     </section>
@@ -49,12 +75,46 @@
     </aside>
   </main>
 
-  <dialog class="modal" id="game-modal" aria-labelledby="modal-title">
+  <!-- Ruota dell'ordine di gioco -->
+  <dialog class="modal" id="order-modal" aria-labelledby="order-title">
+    <button class="modal-close" type="button" data-close aria-label="Chiudi">✕</button>
     <div class="modal-body">
-      <div class="modal-emoji" id="modal-emoji" aria-hidden="true"></div>
-      <h2 id="modal-title"></h2>
-      <p id="modal-text"></p>
-      <form method="dialog"><button class="primary-btn" type="submit">Ok</button></form>
+      <h2 id="order-title">Chi gioca per primo?</h2>
+      <p id="order-text">La ruota decide l'ordine delle squadre. Lo ricorderemo per tutte le partite.</p>
+      <div id="order-wheel"></div>
+      <div class="wheel-result" id="order-result" aria-live="assertive"></div>
+      <ol class="picked-list" id="order-picked"></ol>
+      <div class="modal-actions">
+        <button class="primary-btn big" id="btn-order-spin" type="button">🎡 Gira la ruota</button>
+        <button class="primary-btn big" id="btn-order-done" type="button" hidden>Fatto ✓</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Creazione torneo -->
+  <dialog class="modal wide" id="tour-modal" aria-labelledby="tour-title">
+    <button class="modal-close" type="button" data-close aria-label="Chiudi">✕</button>
+    <div class="modal-body">
+      <div id="tour-step-setup">
+        <div class="modal-emoji" aria-hidden="true">🏆</div>
+        <h2 id="tour-title">Nuovo torneo</h2>
+        <p>La ruota estrae i giochi e si passa dall'uno all'altro senza tornare al menù.<br>Ogni gioco assegna punti in base al piazzamento: 5 al primo, 3 al secondo, 2 al terzo, 1 al quarto.</p>
+        <form id="tour-form" class="tour-options"></form>
+        <div class="modal-actions">
+          <button class="primary-btn big" id="btn-tour-draw" type="button">🎡 Estrai i giochi</button>
+        </div>
+      </div>
+      <div id="tour-step-draw" hidden>
+        <h2>Estrazione dei giochi</h2>
+        <p id="tour-draw-text"></p>
+        <div id="tour-wheel"></div>
+        <div class="wheel-result" id="tour-result" aria-live="assertive"></div>
+        <ol class="lineup" id="tour-lineup"></ol>
+        <div class="modal-actions">
+          <button class="ghost-btn" id="btn-tour-back" type="button" hidden>↺ Rifai</button>
+          <button class="primary-btn big" id="btn-tour-start" type="button" hidden>Inizia il torneo ▶</button>
+        </div>
+      </div>
     </div>
   </dialog>
 
@@ -75,11 +135,23 @@
   <script src="js/storage.js"></script>
   <script src="js/util.js"></script>
   <script src="js/teams.js"></script>
+  <script src="js/order.js"></script>
+  <script src="js/tournament.js"></script>
+  <script src="js/fx.js"></script>
+  <script src="js/wheel.js"></script>
   <script src="js/data/paesi.js"></script>
   <script src="js/data/parole.js"></script>
   <script src="js/data/emoji.js"></script>
   <script src="js/data/verofalso.js"></script>
+  <script src="js/data/foto.js"></script>
+  <script src="js/data/calciatori.js"></script>
+  <script src="js/data/momenti.js"></script>
+  <script src="js/data/storico.js"></script>
+  <script src="js/data/cruciverba.js"></script>
   <script src="js/games.js"></script>
+  <script src="js/games/storico.js"></script>
+  <script src="js/games/impiccato.js"></script>
+  <script src="js/games/cruciverba.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
 </body>

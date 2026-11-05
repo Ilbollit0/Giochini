@@ -37,4 +37,44 @@ window.U = {
     }
     return U.shuffle([...set]).map(String);
   },
+  // Minuscolo, senza accenti né punteggiatura: per confrontare risposte scritte.
+  normalize(s) {
+    return String(s || '')
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  },
+  // Distanza di modifica (errori di battitura tollerati).
+  lev(a, b) {
+    const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      let prev = row[0];
+      row[0] = i;
+      for (let j = 1; j <= b.length; j++) {
+        const tmp = row[j];
+        row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+        prev = tmp;
+      }
+    }
+    return row[b.length];
+  },
+  fmt(n) {
+    return Math.round(n).toLocaleString('it-IT');
+  },
+  // Distanza in km tra due punti sulla Terra.
+  km(lat1, lon1, lat2, lon2) {
+    const r = Math.PI / 180;
+    const a = Math.sin(((lat2 - lat1) * r) / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(((lon2 - lon1) * r) / 2) ** 2;
+    return 6371 * 2 * Math.asin(Math.sqrt(a));
+  },
+  el(tag, props = {}, ...children) {
+    const node = Object.assign(document.createElement(tag), props);
+    node.append(...children.filter((c) => c != null));
+    return node;
+  },
+  gameUrl(id, tour) {
+    return `gioco.html?g=${encodeURIComponent(id)}${tour ? '&t=1' : ''}`;
+  },
 };

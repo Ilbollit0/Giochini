@@ -1,6 +1,6 @@
 // Gestione squadre e punteggi. Lo stato vive qui; la UI si iscrive con onChange.
 window.Teams = (() => {
-  const COLORS = ['#d97757', '#4a7fb5', '#b8901c', '#4f8f63', '#8565b3', '#c4566b', '#2f8f9d', '#7a6f63'];
+  const COLORS = ['#ff8a5c', '#4da3ff', '#ffd166', '#3ddc84', '#b388ff', '#ff5c8a', '#2fd4c9', '#a0a7c0'];
   const DEFAULT_NAMES = ['Arancioni', 'Blu', 'Gialli', 'Verdi', 'Viola', 'Rosa', 'Azzurri', 'Grigi'];
   const MAX_TEAMS = 8;
 
