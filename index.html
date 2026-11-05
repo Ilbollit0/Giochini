@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1ea">
+  <title>Giochini</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Giochini, pagina principale">
+      <span class="brand-logo" aria-hidden="true">🎲</span>
+      <span class="brand-name">Giochini</span>
+    </a>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="btn-tv" type="button" aria-pressed="false" title="Modalità TV: testi più grandi e alto contrasto per lo schermo condiviso">
+        <span aria-hidden="true">📺</span><span class="btn-label">Modalità TV</span>
+      </button>
+      <button class="icon-btn" id="btn-fullscreen" type="button" title="Schermo intero">
+        <span aria-hidden="true">⛶</span><span class="btn-label">Schermo intero</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="games" aria-labelledby="games-title">
+      <div class="section-head">
+        <h1 id="games-title">Scegli un gioco</h1>
+        <p class="subtitle">Sfida i tuoi amici a squadre: ogni risposta giusta vale punti.</p>
+      </div>
+      <ul class="games-grid" id="games-grid"></ul>
+    </section>
+
+    <aside class="scoreboard" aria-labelledby="score-title">
+      <div class="scoreboard-head">
+        <h2 id="score-title">Classifica</h2>
+        <div class="scoreboard-tools">
+          <button class="chip-btn" id="btn-sort" type="button" aria-pressed="false" title="Ordina per punteggio">↕ Ordina</button>
+          <button class="chip-btn" id="btn-reset" type="button" title="Azzera tutti i punteggi">↺ Azzera</button>
+        </div>
+      </div>
+      <ol class="teams" id="teams"></ol>
+      <button class="add-team" id="btn-add-team" type="button">＋ Aggiungi squadra</button>
+    </aside>
+  </main>
+
+  <dialog class="modal" id="game-modal" aria-labelledby="modal-title">
+    <div class="modal-body">
+      <div class="modal-emoji" id="modal-emoji" aria-hidden="true"></div>
+      <h2 id="modal-title"></h2>
+      <p id="modal-text"></p>
+      <form method="dialog"><button class="primary-btn" type="submit">Ok</button></form>
+    </div>
+  </dialog>
+
+  <template id="team-template">
+    <li class="team">
+      <span class="team-rank" aria-hidden="true"></span>
+      <span class="team-color" aria-hidden="true"></span>
+      <input class="team-name" type="text" maxlength="24" aria-label="Nome squadra" spellcheck="false">
+      <div class="team-score" aria-live="polite"></div>
+      <div class="team-controls">
+        <button class="score-btn minus" type="button" data-delta="-1" aria-label="Togli un punto">−</button>
+        <button class="score-btn plus" type="button" data-delta="1" aria-label="Aggiungi un punto">+</button>
+        <button class="remove-btn" type="button" aria-label="Elimina squadra" title="Elimina squadra">✕</button>
+      </div>
+    </li>
+  </template>
+
+  <script src="js/storage.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/teams.js"></script>
+  <script src="js/data/paesi.js"></script>
+  <script src="js/data/parole.js"></script>
+  <script src="js/data/emoji.js"></script>
+  <script src="js/data/verofalso.js"></script>
+  <script src="js/games.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
