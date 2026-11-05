@@ -111,8 +111,96 @@
   const spaced = (letters) => letters.join(' ');
 
   window.GAMES = [
+
+    {
+      id: 'foto',
+      rank: 4,
+      isNew: true,
+      title: 'Indovina dalla foto',
+      emoji: '📸',
+      color: '#ff8a5c',
+      desc: 'Monumenti, piatti tipici e stadi famosi: riconoscili dalla foto.',
+      options: [
+        { key: 'cat', label: 'Categoria', values: [['tutte', 'Tutte'], ...Object.keys(FOTO_QUIZ).map((c) => [c, c])], default: 'tutte' },
+        MODE,
+      ],
+      create(o) {
+        const PROMPT = { Monumenti: 'Che monumento è?', Cibi: 'Che piatto è?', Stadi: 'Che stadio è?' };
+        const cats = o.cat === 'tutte' ? Object.keys(FOTO_QUIZ) : [o.cat];
+        const next = deck(cats.flatMap((cat) => FOTO_QUIZ[cat].map((x) => ({ ...x, cat }))));
+        return () => {
+          const x = next();
+          return withMode(
+            { tag: x.cat, prompt: PROMPT[x.cat], photo: x.img, credit: x.credit, answer: x.answer, explain: '📍 ' + x.where, hints: [{ text: `Si trova in: ${x.where}` }] },
+            o.mode,
+            () => choicesFrom(x.answer, FOTO_QUIZ[x.cat].map((y) => y.answer))
+          );
+        };
+      },
+    },
+    {
+      id: 'calciatore',
+      rank: 2,
+      isNew: true,
+      title: 'Indovina il calciatore',
+      emoji: '⚽',
+      color: '#3ddc84',
+      desc: 'Dalla carriera, squadra dopo squadra, o dalla foto.',
+      options: [
+        { key: 'tipo', label: 'Indizio', values: [['carriera', 'Trasferimenti'], ['foto', 'Foto']], default: 'carriera' },
+        MODE,
+      ],
+      create(o) {
+        const pool = o.tipo === 'foto' ? CALCIATORI.filter((p) => p.img) : CALCIATORI;
+        const next = deck(pool);
+        const initials = (name) => name.replace(/\(.*\)/, '').trim().split(/\s+/).map((w) => w[0] + '.').join(' ');
+        const clubs = (p) => [...new Set(p.career.map((c) => c[1]))];
+        return () => {
+          const p = next();
+          const base = o.tipo === 'foto'
+            ? {
+                prompt: 'Chi è questo calciatore?',
+                photo: p.img,
+                credit: p.credit,
+                hints: [{ text: `Ha giocato in: ${clubs(p).slice(0, 3).join(', ')}` }, { text: `Iniziali: ${initials(p.name)}` }],
+              }
+            : {
+                prompt: 'Di chi è questa carriera?',
+                career: p.career,
+                hints: [{ text: `Iniziali: ${initials(p.name)}` }],
+              };
+          return withMode(
+            { ...base, answer: p.name, explain: o.tipo === 'foto' ? clubs(p).join(' → ') : '' },
+            o.mode,
+            () => choicesFrom(p.name, pool.map((x) => x.name))
+          );
+        };
+      },
+    },
+    {
+      id: 'momenti-calcio',
+      rank: 3,
+      isNew: true,
+      title: 'Momenti del calcio',
+      emoji: '🏟️',
+      color: '#4da3ff',
+      desc: 'Finali e partite leggendarie: riconosci il momento dalla foto.',
+      options: [MODE],
+      create(o) {
+        const next = deck(MOMENTI_CALCIO);
+        return () => {
+          const m = next();
+          return withMode(
+            { prompt: 'Che momento del calcio è?', photo: m.img, credit: m.credit, answer: m.answer, explain: m.desc, hints: [{ text: `Anno: ${m.year}` }] },
+            o.mode,
+            () => choicesFrom(m.answer, MOMENTI_CALCIO.map((x) => x.answer))
+          );
+        };
+      },
+    },
     {
       id: 'matematica',
+      rank: 20,
       title: 'Matematica',
       emoji: '🧮',
       color: '#4a7fb5',
@@ -125,6 +213,7 @@
     },
     {
       id: 'sequenze',
+      rank: 21,
       title: 'Sequenze',
       emoji: '🔢',
       color: '#2f8f9d',
@@ -137,6 +226,7 @@
     },
     {
       id: 'bandiere',
+      rank: 12,
       title: 'Indovina la bandiera',
       emoji: '🏳️',
       color: '#c4566b',
@@ -160,6 +250,7 @@
     },
     {
       id: 'capitali',
+      rank: 13,
       title: 'Capitali',
       emoji: '🏛️',
       color: '#b8901c',
@@ -190,6 +281,7 @@
     },
     {
       id: 'parola',
+      rank: 14,
       title: 'Indovina la parola',
       emoji: '🔤',
       color: '#4f8f63',
@@ -220,6 +312,7 @@
     },
     {
       id: 'anagrammi',
+      rank: 15,
       title: 'Anagrammi',
       emoji: '🔀',
       color: '#7a6f63',
@@ -244,6 +337,7 @@
     },
     {
       id: 'emoji',
+      rank: 16,
       title: 'Indovina dalle emoji',
       emoji: '🎬',
       color: '#8565b3',
@@ -273,6 +367,7 @@
     },
     {
       id: 'vero-falso',
+      rank: 17,
       title: 'Vero o falso',
       emoji: '✅',
       color: '#d97757',
@@ -288,5 +383,4 @@
     },
   ];
 
-  GAMES.forEach((g) => (g.url = `gioco.html?g=${g.id}`));
 })();
