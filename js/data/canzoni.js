@@ -6,6 +6,7 @@
 // In alternativa ogni squadra può caricare un mp3 dal proprio dispositivo
 // dalla pagina principale (🎵 accanto al nome): resta salvato in quel browser.
 window.CANZONI = [
+  { file: 'illeone.mp3', title: 'Il leone' },
   // 'we-are-the-champions.mp3',
   // { file: 'pop-giallo.mp3', title: 'La canzone dei Gialli' },
 ];
