@@ -54,8 +54,11 @@ finché non sono state usate tutte.
 Ogni squadra può avere una canzone che parte quando vince una partita o il torneo
 (nella pagina principale, tocca 🎵 accanto al nome della squadra). Il tasto ■ Stop la ferma.
 
-- **Dalla cartella `musica/`**: copia lì i file mp3 e scrivi i loro nomi in `js/data/canzoni.js`.
-  Già presente: `illeone.mp3` (*Il leone*).
+- **Dalla cartella `musica/`** (quante ne vuoi): copia lì i file audio (mp3, m4a, ogg, wav…) e fai
+  doppio clic su `aggiorna-canzoni.bat`. Lo script legge la cartella e aggiorna da solo
+  `js/data/canzoni.js`; poi ricarica la pagina. Il titolo è il nome del file (`il-leone.mp3` → *Il leone*):
+  per cambiarlo, rinomina il file e rilancia lo script. Già presente: *Il leone*.
+  Serve [Node.js](https://nodejs.org); in alternativa: `node strumenti/aggiorna-canzoni.js`.
 - **Dal dispositivo**: carica un mp3 dalla finestra della canzone; resta salvato solo in quel browser.
 
 Se l'audio è disattivato (🔇), la canzone non parte.

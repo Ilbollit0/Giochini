@@ -1,9 +1,9 @@
-Metti qui i file mp3 delle canzoni della vittoria.
-Poi aggiungi il nome di ogni file in js/data/canzoni.js, per esempio:
+Metti qui i file audio delle canzoni della vittoria (mp3, m4a, ogg, wav...), quante ne vuoi.
 
-window.CANZONI = [
-  'we-are-the-champions.mp3',
-  { file: 'canzone-blu.mp3', title: 'La canzone dei Blu' },
-];
+Poi fai doppio clic su "aggiorna-canzoni.bat" (nella cartella principale del sito):
+l'elenco js/data/canzoni.js si aggiorna da solo. Ricarica la pagina del sito.
+
+Il titolo mostrato è il nome del file: "il-leone.mp3" diventa "Il leone".
+Per cambiarlo, rinomina il file e rilancia aggiorna-canzoni.bat.
 
 Nella pagina principale, tocca 🎵 accanto al nome della squadra per sceglierla.
